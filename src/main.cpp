@@ -92,14 +92,41 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+          // Change orientation and starting position for simplicity
+          for (int i=0; i< ptsx.size(); i++){
+            // Initial x and y should be 0
+            double x = ptsx[i] - px;
+            double y = ptsy[i] - py;
+
+            // Initial orientation angle should be 90 degrees
+            ptsx[i] = x * cos(0-psi) - y * sin(0-psi);
+            ptsy[i] = x * sin(0-psi) + y * cos(0-psi);
+          }
+
+          auto coeffs = polyfit(ptsx, ptsy, 3);
+
+          // Calculate cross track error and orientation error
+          double cte = polyeval(coeffs, px);
+          double epsi = psi - atan(coeffs[1]);
+
+          // Initial steering and throttle values
+          double steer_value = j[1]["steering_angle"];
+          double throttle_value = j[1]["throttle"];
+
+          // Initial state
+          Eigen::VectorXd state(6);
+          state << 0, 0, 0, v, cte, epsi;
+
           /*
-          * TODO: Calculate steering angle and throttle using MPC.
+          * Calculate steering angle and throttle using MPC.
           *
           * Both are in between [-1, 1].
           *
           */
-          double steer_value;
-          double throttle_value;
+          vector<double> control_inputs = mpc.Solve(state, coeffs);
+
+          steer_value = control_inputs[0]/deg2rad(25);
+          throttle_value = control_inputs[1];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
