@@ -22,7 +22,7 @@ double dt = .1;
 const double Lf = 2.67;
 
 // Desired velocity, cross-track error, and orientation error
-double des_v = 100;
+double des_v = 200;
 double des_cte = 0;
 double des_epsi = 0;
 
@@ -51,11 +51,11 @@ class FG_eval {
 
     // Variable weights to tune the error below
     double v_w = 1;
-    double cte_w = 10000;
-    double epsi_w = 10000;
+    double cte_w = 2500;
+    double epsi_w = 2500;
     double delta_w = 100;
     double a_w = 1;
-    double delta_change_w = 1000000;
+    double delta_change_w = 1000;
     double a_change_w = 1;
 
     // Calculate cost based on state (velocity error, cross-track error, and heading error)

@@ -93,6 +93,19 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+          // Initial steering and throttle values
+          double steer_value = j[1]["steering_angle"];
+          double throttle_value = j[1]["throttle"];
+
+          // Account for 100 ms latency by using state after 100 ms as first state
+          double latency = .1;
+          double Lf = 2.67;
+
+          px += v * cos(psi) * latency;
+          py += v * sin(psi) * latency;
+          psi -= v * steer_value/Lf * latency;
+          v += throttle_value * latency;
+
           // Change orientation and starting position for simplicity
           for (int i=0; i< ptsx.size(); i++){
             // Initial x and y should be 0
@@ -116,10 +129,6 @@ int main() {
           double cte = polyeval(coeffs, px);
           double epsi = psi - atan(coeffs[1]);
 
-          // Initial steering and throttle values
-          double steer_value = j[1]["steering_angle"];
-          double throttle_value = j[1]["throttle"];
-
           // Initial state
           Eigen::VectorXd state(6);
           //double initial_x = v*cos(0)*0.1;
@@ -132,7 +141,6 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-          double Lf = 2.67;
           vector<double> control_inputs = mpc.Solve(state, coeffs);
 
           steer_value = control_inputs[0]/(deg2rad(25)*Lf);
