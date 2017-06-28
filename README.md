@@ -2,6 +2,63 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ---
+## Overview
+The purpose of this project is to implement a model predictive controller (MPC) to drive a vehicle along a desired path (reference trajectory). It was tested in a simulator provided by Udacity. The simulator outputs x and y positions, speed, and orientation of the vehicle along with the reference trajectory.
+
+In the simulator, the reference trajectory is show as a yellow line and the predicted path is in green. Below are images of the vehicle driving 51 mph around a curve and 81 mph on a straighter path with speed limit set to 100 mph and 98 mph around the same curve with speed limit set to 200 mph.
+
+![51](Screen Shot 2017-06-28 at 9.50.36 AM)
+![81](Screen Shot 2017-06-28 at 9.51.09 AM)
+![98](Screen Shot 2017-06-28 at 11.51.31 AM)
+
+## The Model
+The model used is a kinematic bicycle model. The model state includes:
+* `x` position
+* `y` position
+* orientation `psi`
+* velocity `v`
+* cross-track error `cte`
+* orientation error `epsi`
+
+The control inputs are:
+* steering angle `delta`
+* acceleration `a`
+
+The following equations are used:
+```
+// values at timestep [t+1] based on values at timestep [t] after dt seconds 
+// Lf is the distance between the front of the vehicle and the center of gravity
+
+x[t+1] = x[t] + v[t] * cos(psi[t]) * dt;
+y[t+1] = y[t] + v[t] * sin(psi[t]) * dt;
+psi[t+1] = psi[t] + v[t]/Lf * delta[t] * dt;
+v[t+1] = v[t] + a[t] * dt;
+cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt;
+epsi[t+1] = psi[t] - psi_des + v[t]/Lf * delta[t] * dt;
+```
+
+## Timestep Length and Elapsed Duration
+The prediction horizon (T) is the product of the timestep length (N) and elapsed duration (dt). Timestep length refers to the number of timesteps in the horizon and elapsed duration is how much time elapses between each actuation.
+
+The prediction horizon I settled on was one second. I set [N = 10 and dt = .1](https://github.com/CassLamendola/Model-Predictive-Control/blob/master/src/MPC.cpp#L8-L10)
+
+I tuned these values until achieving a model that could complete the track at 20 mph as well as 200 mph. At high speeds, these hyperparameters had a greater effect on the performance of the controller. I first tried using a larger N (25) and smaller dt (.25). With these values, if the vehicle "overshot" the reference trajectory, it would begin to oscillate wildly and drive off the track. Lower N (5) resulted in the vehicle driving straight off the track.
+
+I tried N = 20, dt = .1; N = 20, dt = .05; N = 15, dt = .1; N = 15, dt = .05; and N = 5, dt = .1;
+
+I tried N = 10 and dt = .1 after watching this [video](https://www.youtube.com/watch?v=bOQuhpz3YfU&feature=youtu.be&utm_medium=email&utm_campaign=2017-06-05_carnd_term2_annoucements&utm_source=blueshift&utm_content=2017-06-01_carnd_announcements&bsft_eid=5d3d51b3-1acc-41d3-9f6d-cadc1f93a952&bsft_clkid=de8ad7f4-5532-4946-ba57-ca236702203f&bsft_uid=be460fc4-ea43-4a59-9282-51d5a6bd9981&bsft_mid=a085a1a1-2b8f-46e1-b2d3-d474284c60a2) about the project and I achieved the best result with these values.
+
+## Polynomial Fitting and MPC Preprocessing
+First, [the points are transformed](https://github.com/CassLamendola/Model-Predictive-Control/blob/master/src/main.cpp#L110-L113) into the vehicle's coordinate system, making the first point the origin. This is done by subtracting each point from the current position of the vehicle. 
+
+Next, [the orientation is also transformed](https://github.com/CassLamendola/Model-Predictive-Control/blob/master/src/main.cpp#L115-L117) to 0 so that the heading is straight forward. Each point is rotated by psi degrees.
+
+Then the vector of points is converted to an [Eigen vector](https://github.com/CassLamendola/Model-Predictive-Control/blob/master/src/main.cpp#L107-L111) so that it is ready to be an argument in the [polyfit](https://github.com/CassLamendola/Model-Predictive-Control/blob/master/src/main.cpp#L47-L72) function where the points are fitted to a 3rd order polynomial. That polynomial is then evaluated using the [polyeval](https://github.com/CassLamendola/Model-Predictive-Control/blob/master/src/main.cpp#L36-L42) function to calculate the cross-track error.
+
+## Dealing with Latency
+After getting a working MPC, a delay of 100 ms had to be dealt with. When this latency was first introduced, the model oscillated about the reference trajectory and, at high speeds, drove off the track.
+
+To account for the latency, I used the [equations](https://github.com/CassLamendola/Model-Predictive-Control/blob/master/src/main.cpp#L100-L107) mentioned before to set the initial state to be the state after 100 ms. This allows the vehicle to "look ahead" and correct for where it will be in the future instead of where it is currently positioned.
 
 ## Dependencies
 
