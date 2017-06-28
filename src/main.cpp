@@ -87,6 +87,9 @@ int main() {
           // j[1] is the data JSON object
           vector<double> ptsx = j[1]["ptsx"];
           vector<double> ptsy = j[1]["ptsy"];
+          // ^^ try creating these as Eigen vectors rather than transforming later ^^
+
+
           double px = j[1]["x"];
           double py = j[1]["y"];
           double psi = j[1]["psi"];
@@ -95,15 +98,21 @@ int main() {
           // Change orientation and starting position for simplicity
           for (int i=0; i< ptsx.size(); i++){
             // Initial x and y should be 0
-            double x = ptsx[i] - px;
-            double y = ptsy[i] - py;
+            double trans_x = ptsx[i] - px;
+            double trans_y = ptsy[i] - py;
 
             // Initial orientation angle should be 90 degrees
-            ptsx[i] = x * cos(0-psi) - y * sin(0-psi);
-            ptsy[i] = x * sin(0-psi) + y * cos(0-psi);
+            ptsx[i] = trans_x * cos(0-psi) - trans_y * sin(0-psi);
+            ptsy[i] = trans_x * sin(0-psi) + trans_y * cos(0-psi);
           }
 
-          auto coeffs = polyfit(ptsx, ptsy, 3);
+          // Transform points into Eigen vectors for input into polyfit and polyeval
+          double* copy_ptsx = &ptsx[0];
+          double* copy_ptsy = &ptsy[0];
+          Eigen::Map<Eigen::VectorXd> trans_ptsx(copy_ptsx, 6);
+          Eigen::Map<Eigen::VectorXd> trans_ptsy(copy_ptsy, 6);
+
+          auto coeffs = polyfit(trans_ptsx, trans_ptsy, 3);
 
           // Calculate cross track error and orientation error
           double cte = polyeval(coeffs, px);
@@ -115,6 +124,8 @@ int main() {
 
           // Initial state
           Eigen::VectorXd state(6);
+          //double initial_x = v*cos(0)*0.1;
+          //double initial_y = v*sin(0)*0.1;
           state << 0, 0, 0, v, cte, epsi;
 
           /*
@@ -123,9 +134,10 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
+          double Lf = 2.67;
           vector<double> control_inputs = mpc.Solve(state, coeffs);
 
-          steer_value = control_inputs[0]/deg2rad(25);
+          steer_value = control_inputs[0]/(deg2rad(25)*Lf);
           throttle_value = control_inputs[1];
 
           json msgJson;
@@ -138,6 +150,18 @@ int main() {
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
 
+          mpc_x_vals.push_back(0);
+          mpc_y_vals.push_back(0);
+
+          for (int i=2; i<control_inputs.size(); i++){
+            if (i%2 == 0){
+              mpc_x_vals.push_back(control_inputs[i]);
+            }
+            else {
+              mpc_y_vals.push_back(control_inputs[i]);
+            }
+          }
+
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
 
@@ -147,6 +171,11 @@ int main() {
           //Display the waypoints/reference line
           vector<double> next_x_vals;
           vector<double> next_y_vals;
+
+          for (int i=1; i<15; i++){
+            next_x_vals.push_back(i*2.5);
+            next_y_vals.push_back(polyeval(coeffs, i*2.5));
+          }
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
