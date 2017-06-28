@@ -51,8 +51,8 @@ class FG_eval {
 
     // Variable weights to tune the error below
     double v_w = 1;
-    double cte_w = 2500;
-    double epsi_w = 2500;
+    double cte_w = 5000;
+    double epsi_w = 5000;
     double delta_w = 100;
     double a_w = 1;
     double delta_change_w = 1000;
@@ -152,14 +152,6 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   for (int i = 0; i < n_vars; i++) {
     vars[i] = 0;
   }
-
-  // Set the initial variable values
-  vars[x_start] = x;
-  vars[y_start] = y;
-  vars[psi_start] = psi;
-  vars[v_start] = v;
-  vars[cte_start] = cte;
-  vars[epsi_start] = epsi;
 
   Dvector vars_lowerbound(n_vars);
   Dvector vars_upperbound(n_vars);

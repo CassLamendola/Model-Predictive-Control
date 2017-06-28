@@ -126,8 +126,8 @@ int main() {
           auto coeffs = polyfit(trans_ptsx, trans_ptsy, 3);
 
           // Calculate cross track error and orientation error
-          double cte = polyeval(coeffs, px);
-          double epsi = psi - atan(coeffs[1]);
+          double cte = polyeval(coeffs, 0);
+          double epsi = -atan(coeffs[1]);
 
           // Initial state
           Eigen::VectorXd state(6);
