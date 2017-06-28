@@ -7,9 +7,9 @@ The purpose of this project is to implement a model predictive controller (MPC) 
 
 In the simulator, the reference trajectory is show as a yellow line and the predicted path is in green. Below are images of the vehicle driving 51 mph around a curve and 81 mph on a straighter path with speed limit set to 100 mph and 98 mph around the same curve with speed limit set to 200 mph.
 
-![51](Screen Shot 2017-06-28 at 9.50.36 AM.png)
-![81](Screen Shot 2017-06-28 at 9.51.09 AM.png)
-![98](Screen Shot 2017-06-28 at 11.51.31 AM.png)
+![51](Screen\ Shot\ 2017-06-28\ at\ 9.50.36 AM.png)
+![81](Screen\ Shot\ 2017-06-28\ at\ 9.51.09 AM.png)
+![98](Screen\ Shot\ 2017-06-28\ at\ 11.51.31 AM.png)
 
 ## The Model
 The model used is a kinematic bicycle model. The model state includes:
