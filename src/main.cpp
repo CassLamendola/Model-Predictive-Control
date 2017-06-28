@@ -87,9 +87,7 @@ int main() {
           // j[1] is the data JSON object
           vector<double> ptsx = j[1]["ptsx"];
           vector<double> ptsy = j[1]["ptsy"];
-          // ^^ try creating these as Eigen vectors rather than transforming later ^^
-
-
+          
           double px = j[1]["x"];
           double py = j[1]["y"];
           double psi = j[1]["psi"];
